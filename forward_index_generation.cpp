@@ -6,50 +6,48 @@
 #include <sstream>
 #include <map>
 
+
 using namespace std;
 
 int main() {
+	
 	ifstream file;
 	ofstream outputfile;
 	ofstream outputlex;
-
+	
 	outputfile.open("forward_index.txt");
 	outputlex.open("lexicon.txt");
-
+	
 	int docID = 1;
 	string path = ".txt";
 	string filename;
 	map<string, int> lexicon;
 	int fancy = -1;
 	int lastWordID = 0;
-
+	
 	while (docID < 16) {
 		
 		filename = to_string(docID) + path;
 		file.open(filename);
-
+		
 		if (file.fail()) {
 			cout << "Error: Cannot open file";
 			return -1;
 		}
-
+		
 		outputfile << docID << endl;
-		cout << docID << endl;
+		cout << docID << endl; //temp
 		
 		vector<string> temp;
 		vector<vector<int>> vec2d;
-		int plain = 0;
+		int plain = 0, count = 0;
 		string str, word;
 		
-		while (!file.eof()) {
-			getline(file, str, '\n');
-			temp.push_back(str);
-		}
-		
-		for (int i = 0; i < 4; i++) {
-			str = temp[i];
+		while (getline(file, str, '\n')) {
+			
 			stringstream str1(str);
 			while (getline(str1, word, ' ')) {
+				
 				int wordID = 0;
 				map<string, int>::iterator itr;
 				itr = lexicon.find(word);
@@ -58,7 +56,8 @@ int main() {
 					wordID = itr->second;
 				else {
 					wordID = lastWordID + 1;
-					lexicon.insert({ word,wordID });
+					lexicon.insert({ word, wordID });
+					
 					outputlex << word << endl << wordID << endl;
 					lastWordID++;
 				}
@@ -80,14 +79,17 @@ int main() {
 					vec2d[idchecker].push_back(wordID);
 				}
 				
-				if (i == 0 || i == 1 || i == 2) {
+				if (count == 0 || count == 1 || count == 2) {
 					vec2d[idchecker].push_back(fancy);
 				}
+				
 				else {
 					vec2d[idchecker].push_back(plain);
 					plain++;
-				}	
+				}
 			}
+			count++;
+			
 		}
 		outputfile << docID << endl;
 		for (int i = 0; i < vec2d.size(); i++) {
@@ -96,7 +98,8 @@ int main() {
 			}
 			outputfile << "." << endl;
 		}
-		outputfile << "_" <<endl;
+		outputfile << "_" << endl;
+
 		docID++;
 		file.close();
 	}
@@ -105,6 +108,5 @@ int main() {
 	outputlex << ".";
 	outputlex.close();
 	cout << "Lexicon file finalized." << endl;
-	system("pause");
 	return 0;
 }
