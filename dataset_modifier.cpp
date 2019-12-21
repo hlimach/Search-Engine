@@ -32,11 +32,7 @@ int main() {
 		const char *mystart = str.c_str();
 		bool instring{ false };
 		for (const char* p = mystart; *p; p++) {
-			if (*p == '"') {
-				instring = !instring;
-				mystart++;
-			}
-			else if (*p == ',' && !instring) {
+			if (*p == ',' && ccount != 9) {
 				if (ccount == 2 || ccount == 3 || ccount == 4 || ccount == 5 || ccount == 6 || ccount == 7) {
 					temp.push_back(str.substr(base, length));
 				}
