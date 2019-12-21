@@ -5,55 +5,47 @@
 #include <vector>
 #include <sstream>
 #include <map>
-
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 int main() {
 	
 	ifstream file;
-	ofstream outputfile;
-	ofstream outputlex;
+	ofstream outputfile, outputlex;
 	
 	outputfile.open("forward_index.txt");
 	outputlex.open("lexicon.txt");
 	
-	int docID = 1;
-	string path = ".txt";
-	string filename;
+	int docID = 1, fancy = -1, lastWordID = 0;
 	map<string, int> lexicon;
-	int fancy = -1;
-	int lastWordID = 0;
+	
+	auto start = high_resolution_clock::now();
 	
 	while (docID < 16) {
-		
-		filename = to_string(docID) + path;
-		file.open(filename);
+		file.open(to_string(docID) + ".txt");
 		
 		if (file.fail()) {
-			cout << "Error: Cannot open file";
+			cout << "Error: Cannot open file: " << docID << endl;
 			return -1;
 		}
 		
-		outputfile << docID << endl;
-		cout << docID << endl; //temp
+		cout << docID << endl; //temporary 
 		
-		vector<string> temp;
-		vector<vector<int>> vec2d;
+		map<int,vector<int>> hits;
 		int plain = 0, count = 0;
 		string str, word;
 		
 		while (getline(file, str, '\n')) {
 			
 			stringstream str1(str);
+			
 			while (getline(str1, word, ' ')) {
+				int wordID;
 				
-				int wordID = 0;
-				map<string, int>::iterator itr;
-				itr = lexicon.find(word);
-				
-				if (itr != lexicon.end())
-					wordID = itr->second;
+				if (lexicon.find(word) != lexicon.end())
+					wordID = lexicon.find(word)->second;
 				else {
 					wordID = lastWordID + 1;
 					lexicon.insert({ word, wordID });
@@ -62,51 +54,47 @@ int main() {
 					lastWordID++;
 				}
 				
-				int idchecker = 0;
-				bool idfound = false;
+				if (hits.find(wordID) == hits.end())
+                    			hits.insert({wordID,vector<int>()});
 				
-				while (idchecker != vec2d.size()) {
-					if (vec2d[idchecker][0] != wordID)
-						idchecker++;
-					else {
-						idfound = true;
-						break;
-					}
-				}
-				
-				if (idfound == false) {
-					vec2d.push_back(vector<int>());
-					vec2d[idchecker].push_back(wordID);
-				}
-				
-				if (count == 0 || count == 1 || count == 2) {
-					vec2d[idchecker].push_back(fancy);
-				}
-				
+				if (count == 0 || count == 1 || count == 2)
+					hits.find(wordID)->second.push_back(fancy);
 				else {
-					vec2d[idchecker].push_back(plain);
+					hits.find(wordID)->second.push_back(plain);
 					plain++;
 				}
+				
 			}
-			count++;
 			
+			count++;	
 		}
+		
 		outputfile << docID << endl;
-		for (int i = 0; i < vec2d.size(); i++) {
-			for (int j = 0; j < vec2d[i].size(); j++) {
-				outputfile << vec2d[i][j] << endl;
-			}
-			outputfile << "." << endl;
-		}
+		for(map<int,vector<int>>::iterator itr = hits.begin(); itr != hits.end(); itr++) {
+            		outputfile << itr->first << endl;
+            
+            		for(int i = 0; i < itr->second.size(); i++)
+                		outputfile << itr->second[i] << endl;
+            
+             		outputfile << "." << endl;
+        	}
 		outputfile << "_" << endl;
 
 		docID++;
 		file.close();
 	}
+	
+	auto stop = high_resolution_clock::now();
+    	auto duration = duration_cast<seconds>(stop - start);
+    
+    	cout << "Time taken: " << (duration.count()) << " seconds" << endl;
+	
 	outputfile.close();
 	cout << "Forward index file finalized." << endl;
+	
 	outputlex << ".";
 	outputlex.close();
 	cout << "Lexicon file finalized." << endl;
+	
 	return 0;
 }
