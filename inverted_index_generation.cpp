@@ -8,11 +8,12 @@ using namespace std;
 
 int main() {
 	ifstream lex, forwardindex;
-	ofstream outputfile;
+	ofstream mainIndex, shortIndex;
 
 	lex.open("lexicon.txt");
 	forwardindex.open("forward_index.txt");
-	outputfile.open("inverted_index.txt");
+	mainIndex.open("inverted_index.txt");
+    	shortIndex.open("small_inverted_index.txt");
 
 	if (lex.fail() || forwardindex.fail()) {
         	(lex.fail()) ? cout << "Error: Cannot open lexicon file" << endl : cout << "Error: Cannot open forward index file." << endl;
@@ -20,17 +21,16 @@ int main() {
     	}
 
 	map<string, int> lexicon;
-	map<int, map<int,vector<int>>> findex, invertedIndex;
+	map<int, map<int,vector<int>>> findex;
 	
 	while (true) {
 		string str, word;
-
 		getline(lex, word, '\n');
 
-		if (word == ".") break;
+		if (word == ".") 
+			break;
 
 		getline(lex, str, '\n');
-		
 		lexicon.insert({word,stoi(str)});
 	}
 
@@ -39,19 +39,26 @@ int main() {
 		string str;
 		getline(forwardindex, str, '\n');
 
-		if (str == "") break;
+		if (str == "") 
+			break;
 
 		int docID = stoi(str);
 
 		while (true) {
 			getline(forwardindex, str, '\n');
-            		if (str == "_") break;
+			
+            		if (str == "_") 
+				break;
+			
             		int wordID = stoi(str);
             		vector<int> temp;
             
             		while (true) {
                 		getline(forwardindex, str, '\n');
-                		if (str == "." || str == "_") break;
+				
+                		if (str == "." || str == "_") 
+					break;
+				
                 		temp.push_back(stoi(str));
             		}
             
@@ -66,6 +73,7 @@ int main() {
 	
 	for (lexi = lexicon.begin(); lexi != lexicon.end(); lexi++) {
 		map<int,vector<int>> updatedhits;
+		map<int,int> temp;
         
         	while (top != findex.end()) {
 
@@ -75,19 +83,43 @@ int main() {
             		top++;
         	}
 
-        	invertedIndex.insert({ lexi->second, updatedhits});
+        	int count = 0;
+        	mainIndex << lexi->second << endl;
+        	bool insertion = true;
 
-        	outputfile << lexi->second << endl;
         	for(map<int,vector<int>>::iterator itr = updatedhits.begin(); itr != updatedhits.end(); itr++) {
-            		outputfile << itr->first << endl;
+            		itr != updatedhits.end(); itr++) {
+            		mainIndex << itr->first << endl;
             
             		for(int i = 0; i < itr->second.size(); i++)
-                		outputfile << itr->second[i] << endl;
+                		mainIndex << itr->second[i] << endl;
+				
+			if(itr->second.size() != 0) {
+                		count = 0;
+                		if(itr->second[count] == -1) {
+                    			count++;
+                
+                    			while(itr->second[count] == -1)
+                        			count++;
+                    
+                    			if(insertion) {
+                        			shortIndex << lexi->second << endl;
+                        			insertion = false;
+                   			}
+                    
+                    			shortIndex << itr->first << endl << count << endl;
+                		}
+                
+            		}
             
-             		outputfile << "." << endl;
+             		mainIndex << "." << endl;
         	}
         
-        	outputfile << "_" << endl;
+        	mainIndex << "_" << endl;
+        
+        	if(!insertion)
+            		shortIndex << "_" << endl;
+			
 		top = findex.begin();
 	}
 
