@@ -34,7 +34,7 @@ int main() {
 		for (const char* p = mystart; *p; p++) {
 			if (*p == '"') {
 				instring = !instring;
-				mystart++;
+				length++;
 			}
 			else if (*p == ',' && !instring) {
 				if (ccount == 2 || ccount == 3 || ccount == 4 || ccount == 5 || ccount == 6 || ccount == 7) {
