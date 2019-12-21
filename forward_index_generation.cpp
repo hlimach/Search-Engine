@@ -57,9 +57,9 @@ int main() {
 				if (hits.find(wordID) == hits.end())
                     			hits.insert({wordID,vector<int>()});
 				
-				if (count == 0 || count == 1 || count == 2)
+				if (count == 0 || count == 1 || count == 2 || count == 3)
 					hits.find(wordID)->second.push_back(fancy);
-				else {
+				else if (count == 6){
 					hits.find(wordID)->second.push_back(plain);
 					plain++;
 				}
