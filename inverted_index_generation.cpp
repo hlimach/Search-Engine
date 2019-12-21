@@ -7,29 +7,20 @@
 using namespace std;
 
 int main() {
-	ifstream lex;
-	ifstream forwardindex;
+	ifstream lex, forwardindex;
 	ofstream outputfile;
 
 	lex.open("lexicon.txt");
 	forwardindex.open("forward_index.txt");
 	outputfile.open("inverted_index.txt");
 
-	if (lex.fail()) {
-		cout << "Error: Cannot open lexicon file";
-		system("pause");
-		return 0;
-	}
-
-	if (forwardindex.fail()) {
-		cout << "Error: Cannot open forward index file.";
-		system("pause");
-		return 0;
-	}
+	if (lex.fail() || forwardindex.fail()) {
+        	(lex.fail()) ? cout << "Error: Cannot open lexicon file" << endl : cout << "Error: Cannot open forward index file." << endl;
+        	return -1;
+    	}
 
 	map<string, int> lexicon;
-	map<int, vector<vector<int>>> findex;
-	map<int, vector<vector<int>>> invertedIndex;
+	map<int, map<int,vector<int>>> findex, invertedIndex;
 	
 	while (true) {
 		string str, word;
@@ -39,13 +30,12 @@ int main() {
 		if (word == ".") break;
 
 		getline(lex, str, '\n');
-		int wordID = stoi(str);
-
-		lexicon.insert({word,wordID});
+		
+		lexicon.insert({word,stoi(str)});
 	}
 
 	while (!forwardindex.eof()) {
-		vector<vector<int>> vec2d;
+		map<int,vector<int>> hits;
 		string str;
 		getline(forwardindex, str, '\n');
 
@@ -54,48 +44,50 @@ int main() {
 		int docID = stoi(str);
 
 		while (true) {
-			vector<int> temp;
-			while (true) {
-				getline(forwardindex, str, '\n');
-				if (str == "." || str =="_") break;
-				int x = stoi(str);
-				temp.push_back(x);
-			}
-			if (str == "_") break;
-			vec2d.push_back(temp);
-		}
-		findex.insert({docID, vec2d});
+			getline(forwardindex, str, '\n');
+            		if (str == "_") break;
+            		int wordID = stoi(str);
+            		vector<int> temp;
+            
+            		while (true) {
+                		getline(forwardindex, str, '\n');
+                		if (str == "." || str == "_") break;
+                		temp.push_back(stoi(str));
+            		}
+            
+            		hits.insert({wordID,temp});
+        	}
+        
+        	findex.insert({docID, hits});
 	}
 	
-	map<int, vector<vector<int>>>::iterator top = findex.bgin();
+	map<int, vector<vector<int>>>::iterator top = findex.begin();
 	map<string, int>::iterator lexi;
 	
 	for (lexi = lexicon.begin(); lexi != lexicon.end(); lexi++) {
-		vector<vector<int>> updated2dvec; 
-		while (top != findex.end()) {
-			for (int i = 0; i < top->second.size(); i++) {
-				if (top->second[i][0] == lexi->second) {
-					top->second[i][0] = top->first;
-					updated2dvec.push_back(top->second[i]);
-					top->second.erase(top->second.begin() + i);
-					break;
-				}
-			}
-			top++;
-		}
+		map<int,vector<int>> updatedhits;
+        
+        	while (top != findex.end()) {
 
-		invertedIndex.insert({ lexi->second, updated2dvec});
+            		if (top->second.find(lexi->second) != top->second.end())
+                		updatedhits.insert({top->first, top->second.find(lexi->second)->second});
+            
+            		top++;
+        	}
 
+        	invertedIndex.insert({ lexi->second, updatedhits});
 
-		outputfile << lexi->second << endl;
-		for (int j = 0; j < updated2dvec.size(); j++) {
-			for (int k = 0; k < updated2dvec[j].size(); k++) {
-				outputfile << updated2dvec[j][k] << ",";
-			}
-			outputfile << "." << endl;
-		}
-		outputfile << "." << endl;
-
+        	outputfile << lexi->second << endl;
+        	for(map<int,vector<int>>::iterator itr = updatedhits.begin(); itr != updatedhits.end(); itr++) {
+            		outputfile << itr->first << endl;
+            
+            		for(int i = 0; i < itr->second.size(); i++)
+                		outputfile << itr->second[i] << endl;
+            
+             		outputfile << "." << endl;
+        	}
+        
+        	outputfile << "_" << endl;
 		top = findex.begin();
 	}
 
@@ -103,5 +95,5 @@ int main() {
 	outputfile.close();
 	cout << "Inverted index generated." << endl;
 
-	system("pause");
+	return 0;
 }
