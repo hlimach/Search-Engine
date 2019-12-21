@@ -1,0 +1,80 @@
+#include <FL/Fl.H>
+#include <FL/Fl_Window.H>
+#include <FL/Fl_Box.H>
+#include <FL/Fl_Button.H>
+#include <FL/Fl_Input.H>
+#include <FL/Fl_Image.H>
+#include <FL/Fl_Menu_Item.H>
+#include <FL/Fl_Menu_Bar.H>
+
+void quit_cb(Fl_Widget*, void*) { /*exit(0); */ }
+
+Fl_Menu_Item Author[] = {
+  {"&Author",0,0,0,FL_SUBMENU},
+	{"&a", 0, 0},
+	{"&b",  0, 0},
+	{"&c", 0, 0},
+	{0},
+  };
+
+Fl_Menu_Item Publisher[] = {
+  {"&Publisher",0,0,0,FL_SUBMENU},
+	{"&a", 0, 0},
+	{"&b",  0, 0},
+	{"&c", 0, 0},
+	{0},
+};
+
+Fl_Menu_Item Date[] = {
+  {"&Date",0,0,0,FL_SUBMENU},
+	{"&a", 0, 0},
+	{"&b",  0, 0},
+	{"&c", 0, 0},
+	{0},
+};
+
+Fl_Menu_Item Year[] = {
+  {"&Year",0,0,0,FL_SUBMENU},
+	{"&a", 0, 0},
+	{"&b",  0, 0},
+	{"&c", 0, 0},
+	{0},
+};
+
+
+int main(int argc, char **argv) {
+
+	Fl_Window window(600, 300 , "Search Engine");
+	window.color(FL_WHITE);
+	
+	Fl_Menu_Bar author(100, 150,70, 30);
+	author.menu(Author);
+	Fl_Menu_Bar publisher(200, 150, 80, 30);
+	publisher.menu(Publisher);
+	Fl_Menu_Bar date(310, 150, 50, 30);
+	date.menu(Date);
+	Fl_Menu_Bar year(390, 150, 50, 30);
+	year.menu(Year);
+
+	Fl_Box *box = new Fl_Box(250, 20, 100, 100, "SEARCH NEWS");
+	box->box(FL_NO_BOX);
+	box->labelfont(FL_BOLD);
+	box->labelsize(30);
+	box->labeltype(FL_SHADOW_LABEL);
+
+	Fl_Button *search = new Fl_Button(500,100, 70, 30, "SEARCH");
+	search->box(FL_UP_BOX);
+	search->labelfont(FL_BOLD);
+	search->labelsize(12);
+	search->labeltype(FL_SHADOW_LABEL);
+	search->labelcolor(fl_rgb_color(162, 60, 20));
+
+	//Fl_Image title = new FL_Image("../data/title.jpg");
+
+	Fl_Input *input = new Fl_Input(100, 100,350 , 30);
+	input->value("Input your search query");
+
+	window.end();
+	window.show(argc, argv);
+	return Fl::run();
+}
