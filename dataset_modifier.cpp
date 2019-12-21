@@ -56,7 +56,7 @@ int main() {
 		for (int i = 0; i < 7; i++) {
 
 			if (i == 3 || i == 4 || i == 5) {
-				workbook << temp[i] << endl;
+				workbook << temp[i] << " " << endl;
 				continue;
 			}
 
@@ -72,7 +72,9 @@ int main() {
 					|| *start == '[' || *start == ']' || *start == '¦' || *start == '”') {
 					start++; base++;
 				}
+				
 				p = start;
+				
 				while (*p != '"' && *p != ',' && *p != ' ' && *p != '-'  && *p != ':'  && *p != ';'   && *p != '.' && *p != '!'
 					&& *p != '?'  && *p != '('  && *p != ')'  && *p != '_'  && *p != '/' && *p != '€'  && *p != 'â'  &&
 					*p != '™' && *p != '˜' && *p != 'œ' && *p != '[' && *p != ']' && *p != '¦' && *p != '”' &&
