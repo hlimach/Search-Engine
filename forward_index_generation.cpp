@@ -31,7 +31,8 @@ int main() {
 			return -1;
 		}
 		
-		cout << docID << endl; //temporary 
+		if(docID % 5000 == 0) 
+			cout << docID << endl;
 		
 		map<int,vector<int>> hits;
 		int plain = 0, count = 0;
@@ -43,24 +44,28 @@ int main() {
 			
 			while (getline(str1, word, ' ')) {
 				int wordID;
+				map<string, int>::iterator lexitr = lexicon.find(word);
 				
-				if (lexicon.find(word) != lexicon.end())
-					wordID = lexicon.find(word)->second;
+				if (lexitr != lexicon.end())
+					wordID = lexitr->second;
 				else {
 					wordID = lastWordID + 1;
 					lexicon.insert({ word, wordID });
-					
 					outputlex << word << endl << wordID << endl;
 					lastWordID++;
 				}
 				
-				if (hits.find(wordID) == hits.end())
+				map<int,vector<int>>::iterator hitsitr = hits.find(wordID);
+				
+				if (hitsitr == hits.end()) {
                     			hits.insert({wordID,vector<int>()});
+                    			hitsitr = hits.find(wordID);
+                		}
 				
 				if (count == 0 || count == 1 || count == 2 || count == 3)
-					hits.find(wordID)->second.push_back(fancy);
-				else if (count == 6){
-					hits.find(wordID)->second.push_back(plain);
+					hitsitr->second.push_back(fancy);
+				else if (count == 6) {
+					hitsitr->second.push_back(plain);
 					plain++;
 				}
 				
