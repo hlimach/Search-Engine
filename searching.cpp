@@ -3,82 +3,324 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <sstream>
+#include <algorithm>
+#include <iterator>
 
 using namespace std;
 
-//basic function declarations
 map<string,int> loadLexicon();
-map<int,map<int,vector<int>>> loadInvertedIndex();
-map<int,map<int,int>> loadSmallInvertedIndex();
-
-//creating a search vector
-vector<int> search(string str);
+map<int,vector<vector<int>>> loadInvertedIndex(string filename);
+map<int,vector<vector<int>>> loadSmallInvertedIndex();
+vector<vector<int>> singlewordSearch(int wordID, map<int,vector<vector<int>>> smallInvertedIndex, map<int,vector<vector<int>>> invertedIndex);
+vector<int> multiwordSearch(string str);
+void displayResults(vector<vector<int>> finalplain);
 
 int main() {
-    //loading the lexicon and inverted indexes into the system
-    map<string,int> lexicon = loadLexicon();
-    map<int,map<int,vector<int>>> invertedIndex = loadInvertedIndex();
-    map<int,map<int,int>> smallInvertedIndex =  loadSmallInvertedIndex();
     
-    //loop to repeatedly ask for search word. This will later be editted to create a frontend of search queries
+    map<string,int> lexicon = loadLexicon();
+    cout << "lex" << endl;
+    map<int,vector<vector<int>>> invertedIndex1 = loadInvertedIndex("inverted_index1.txt");
+    cout << "ii1" << endl;
+    map<int,vector<vector<int>>> invertedIndex2 = loadInvertedIndex("inverted_index2.txt");
+    cout << "ii2" << endl;
+    map<int,vector<vector<int>>> invertedIndex3 = loadInvertedIndex("inverted_index3.txt");
+    cout << "ii3" << endl;
+    map<int,vector<vector<int>>> invertedIndex4 = loadInvertedIndex("inverted_index4.txt");
+    cout << "ii4" << endl;
+    map<int,vector<vector<int>>> smallInvertedIndex =  loadSmallInvertedIndex();
+    cout << "sii" << endl;
+    
     while(true) {
-        string word;
-        cout << "Enter any word (enter -1 to end):" << endl; //prompting the user to input a word as a search query
-        cin >> word;
+        string word, str;
+        vector<string> query;
         
-        //check on the input word to exit the code if the word input is -1
-        if(word == "-1")
+        cout << "Enter any word (enter -1 to end):" << endl;
+        cin >> str;
+        str = str + " ";
+        if(str == "-1")
             break;
         
-        //converting the single word search query to lowercase inorder to check it against the lexicons
-        transform(word.begin(), word.end(), word.begin(), ::tolower);
-        cout << "DocIDs with your word in it: " << endl;  //acknowledging the user 
-    
-        /*checking the input query word in the lexicon to see if the word exists. 
-        In case of a match the lexicon.find() function will return a pointer to the word.
-        In that case, we will take the the wordid and use it to find the documents that match the search query.
-        If the lexicon.find() function does not find the word in the lexicon, it will return the iterator to the end of the 
-        lexicon which will be used as a check to identify whether the word existed in the data or not. */
+        transform(str.begin(), str.end(), str.begin(), ::tolower);
+        istringstream iss(str);
         
-        if (lexicon.find(word) != lexicon.end()) {
-            int wordId = lexicon.find(word)->second;
+        while(getline(iss,word,' ')) {
+            query.push_back(word);
+        }
+        
+        cout << query.size() << endl;
+        for (int i = 0; i < query.size(); i++)
+            cout << query[i] << " " << endl;
+        
+        if(query.size() > 1) {
+            vector<int> wordIDs;
+            vector<vector<int>> fdocIDs, pdocIDs;
             
-            //checking in the smaller fancy hit barrel to see whether the word exists as a fancy hit
-            if(smallInvertedIndex.find(wordId) != smallInvertedIndex.end()) {
-                map<int,int>::iterator itr = smallInvertedIndex.find(wordId)->second.begin();
-            
-                //if the word is found as a fancy hit, this code will display the names of all the documents that contain the word
-                for(itr; itr != smallInvertedIndex.find(wordId)->second.end(); itr++)
-                    cout << itr->first << endl;
+            for(int i = 0; i < query.size(); i++) {
+                
+                if(lexicon.find(query[i]) == lexicon.end()) {
+                    cout << "Words entered in query do not match any Documents!" << endl;
+                    wordIDs.clear();
+                    break;
+                }
+                else
+                    wordIDs.push_back(lexicon.find(query[i])->second);
             }
-            else {
-                //checking the other barrel to see if the word exists as a plain text
-                map<int,vector<int>>::iterator itr = invertedIndex.find(wordId)->second.begin();
             
-                for(itr; itr != invertedIndex.find(wordId)->second.end(); itr++)
-                    cout << itr->first << endl;
+            if(wordIDs.size() != 0) {
+                
+                int count = 0;
+                for (int i = 0; i < wordIDs.size(); i++) {
+                    if (wordIDs[i] % 4 == 0) {
+                        
+                        for(int j = 0; j < smallInvertedIndex.find(wordIDs[i])->second.size(); j++)
+                            fdocIDs.push_back(smallInvertedIndex.find(wordIDs[i])->second[j]);
+                        
+                        if(count == 0) {
+                            for(int j = 0; j < invertedIndex4.find(wordIDs[i])->second.size(); j++)
+                                pdocIDs.push_back(invertedIndex4.find(wordIDs[i])->second[j]);
+                            count++;
+                        }
+                        else {
+                            for(int k = 0; k < pdocIDs.size(); k++) {
+                                bool eq = false;
+                                for (int j = 0; j < invertedIndex4.find(wordIDs[i])->second.size(); j++) {
+                                    if(pdocIDs[k][0] == invertedIndex4.find(wordIDs[i])->second[j][0]){
+                                        pdocIDs.push_back(invertedIndex4.find(wordIDs[i])->second[j]);
+                                        eq = true;
+                                    }
+                                }
+                                if(!eq)
+                                    pdocIDs.erase(pdocIDs.begin() + k);
+                            }
+                        }
+                            
+                    }
+                    
+                    else if (wordIDs[i] % 3 == 0) {
+                        
+                        for(int j = 0; j < smallInvertedIndex.find(wordIDs[i])->second.size(); j++)
+                            fdocIDs.push_back(smallInvertedIndex.find(wordIDs[i])->second[j]);
+                        
+                        if(count == 0) {
+                            for(int j = 0; j < invertedIndex3.find(wordIDs[i])->second.size(); j++)
+                                pdocIDs.push_back(invertedIndex3.find(wordIDs[i])->second[j]);
+                            count++;
+                        }
+                        else {
+                            for(int k = 0; k < pdocIDs.size(); k++) {
+                                bool eq = false;
+                                for (int j = 0; j < invertedIndex3.find(wordIDs[i])->second.size(); j++) {
+                                    if(pdocIDs[k][0] == invertedIndex3.find(wordIDs[i])->second[j][0]){
+                                        pdocIDs.push_back(invertedIndex3.find(wordIDs[i])->second[j]);
+                                        eq = true;
+                                    }
+                                }
+                                if(!eq)
+                                    pdocIDs.erase(pdocIDs.begin() + k);
+                            }
+                        }
+                        
+                    }
+                    else if (wordIDs[i] % 2 == 0) {
+                        
+                        for(int j = 0; j < smallInvertedIndex.find(wordIDs[i])->second.size(); j++)
+                            fdocIDs.push_back(smallInvertedIndex.find(wordIDs[i])->second[j]);
+                        
+                        if(count == 0) {
+                            for(int j = 0; j < invertedIndex2.find(wordIDs[i])->second.size(); j++)
+                                pdocIDs.push_back(invertedIndex2.find(wordIDs[i])->second[j]);
+                            count++;
+                        }
+                        else {
+                            for(int k = 0; k < pdocIDs.size(); k++) {
+                                bool eq = false;
+                                for (int j = 0; j < invertedIndex2.find(wordIDs[i])->second.size(); j++) {
+                                    if(pdocIDs[k][0] == invertedIndex2.find(wordIDs[i])->second[j][0]){
+                                        pdocIDs.push_back(invertedIndex2.find(wordIDs[i])->second[j]);
+                                        eq = true;
+                                    }
+                                }
+                                if(!eq)
+                                    pdocIDs.erase(pdocIDs.begin() + k);
+                            }
+                        }
+                        
+                    }
+                    
+                    else {
+                        
+                        for(int j = 0; j < smallInvertedIndex.find(wordIDs[i])->second.size(); j++)
+                            fdocIDs.push_back(smallInvertedIndex.find(wordIDs[i])->second[j]);
+                        
+                        if(count == 0) {
+                            for(int j = 0; j < invertedIndex1.find(wordIDs[i])->second.size(); j++)
+                                pdocIDs.push_back(invertedIndex1.find(wordIDs[i])->second[j]);
+                            count++;
+                        }
+                        else {
+                            for(int k = 0; k < pdocIDs.size(); k++) {
+                                bool eq = false;
+                                for (int j = 0; j < invertedIndex1.find(wordIDs[i])->second.size(); j++) {
+                                    if(pdocIDs[k][0] == invertedIndex1.find(wordIDs[i])->second[j][0]){
+                                        pdocIDs.push_back(invertedIndex1.find(wordIDs[i])->second[j]);
+                                        eq = true;
+                                    }
+                                }
+                                if(!eq)
+                                    pdocIDs.erase(pdocIDs.begin() + k);
+                            }
+                        }
+                    }
+                    
+                }
+                
+                vector<int> finalfancy;
+                
+                for(int i = 0; i < fdocIDs.size()/2 + 1; i++) {
+                    for (int j = i+1; j < fdocIDs.size(); j++) {
+                        if (fdocIDs[i][0] == fdocIDs[j][0]) {
+                            finalfancy.push_back(fdocIDs[i][0]);
+                            fdocIDs.erase(fdocIDs.begin() + j);
+                            break;
+                        }
+                    }
+                }
+                
+                vector<vector<int>> freq;
+                for(int i = 0; i < pdocIDs.size(); i++) {
+                    freq.push_back(vector<int>());
+                    int count = pdocIDs[i].size();
+                    for (int j = i+1; j < pdocIDs.size(); j++) {
+                        if (pdocIDs[i][0] == pdocIDs[j][0]) {
+                            count += pdocIDs[j].size();
+                        }
+                    }
+                    freq[i].push_back(pdocIDs[i][0]);
+                    freq[i].push_back(count);
+                }
+                
+                //now i have finalized plain and fancy docs
+                //i should list fancy as is, and compare plain
+                
+                for (int i = 0; i < finalfancy.size(); i++)
+                    cout << finalfancy[i] << endl;
+                
+                bool swapped;
+                for (int i = 0; i < freq.size(); i++) {
+                   swapped = false;
+                   for (int j = 0; j < freq.size()-1; j++) {
+                       
+                      if (freq[j][1] > freq[j+1][1]) {
+                         swap(freq[j], freq[j+1]);
+                         swapped = true;
+                      }
+                       
+                   }
+                
+                   if (swapped == false)
+                      break;
+                }
+                
+                for (int i = 0; i < freq.size(); i++)
+                    cout << freq[i][0] << endl;
+                
             }
+            
+            
         }
         else {
-            //if the lexicon.end() returns to the end of the lexicon, it will tell the user that the word does not exist in the data
-            cout << "No matching results found!" << endl;
+            
+            if (lexicon.find(word) != lexicon.end()) {
+                vector<vector<int>> docIDs;
+                int wordID = lexicon.find(word)->second;
+                
+                if (wordID % 4 == 0)
+                    docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex4);
+                else if (wordID % 3 == 0)
+                    docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex3);
+                else if (wordID % 2 == 0)
+                    docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex2);
+                else
+                    docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex1);
+                    
+                cout << "Documents with your query: " << endl;
+                for(int i = 0; i < docIDs.size(); i++)
+                    cout << docIDs[i][0] << endl;
+                
+            }
+            
+            else {
+                cout << "No matching results found!" << endl;
+            }
+            
         }
+        
     }
 }
 
-//function to load the lexicon file
+vector<vector<int>> singlewordSearch(int wordID, map<int,vector<vector<int>>> smallInvertedIndex, map<int,vector<vector<int>>> invertedIndex) {
+    vector<vector<int>> docIDs;
+    map<int,vector<vector<int>>>::iterator itr = smallInvertedIndex.find(wordID);
+    
+    if(itr != smallInvertedIndex.end()) {
+        bool swapped;
+        for (int i = 0; i < itr->second.size(); i++) {
+           swapped = false;
+           for (int j = 0; j < itr->second.size()-1; j++) {
+               
+              if (itr->second[j][1] > itr->second[j+1][1]) {
+                 swap(itr->second[j], itr->second[j+1]);
+                 swapped = true;
+              }
+               
+           }
+        
+           if (swapped == false)
+              break;
+        }
+        docIDs = itr->second;
+    }
+    
+    if (docIDs.size() < 5) {
+        map<int,vector<vector<int>>>::iterator itr = invertedIndex.find(wordID);
+        vector<vector<int>> secondary;
+        for(int i = 0; i != itr->second.size(); i++) {
+            vector<int> temp;
+            temp.push_back(itr->second[i][0]);
+            temp.push_back(itr->second[i].size()-1);
+            secondary.push_back(temp);
+        }
+        
+        bool swapped;
+        for (int i = 0; i < secondary.size(); i++) {
+           swapped = false;
+           for (int j = 0; j < secondary.size()-1; j++) {
+              if (secondary[j][1] > secondary[j+1][1]) {
+                 swap(secondary[j], secondary[j+1]);
+                 swapped = true;
+              }
+           }
+           if (swapped == false)
+              break;
+        }
+        for(int i = 0; i < secondary.size(); i++)
+            docIDs.push_back(secondary[i]);
+    }
+
+    return docIDs;
+}
+
 map<string,int> loadLexicon() {
     ifstream lex;
     lex.open("lexicon.txt");
     map<string, int> lexicon;
     
-    //error message if the lexicon file is not loaded
     if (lex.fail()) {
         cout << "Error: cannot open lexicon file" << endl;
         return lexicon;
     }
     
-    //the loop that reads the lexicon.txt line by line and creates a lexicon map
     while (true) {
         string str, word;
         getline(lex, word, '\n');
@@ -92,15 +334,13 @@ map<string,int> loadLexicon() {
     return lexicon;
 }
 
-//the function to load the inverted index into the system
-map<int,map<int,vector<int>>> loadInvertedIndex() {
+map<int,vector<vector<int>>> loadInvertedIndex(string filename) {
     ifstream index;
-    index.open("inverted_index.txt");
-    map<int, map<int,vector<int>>> invertedIndex;
+    index.open(filename);
+    map<int,vector<vector<int>>> invertedIndex;
     
-    //loop till the end of the file
     while (!index.eof()) {
-        map<int,vector<int>> hits;
+        vector<vector<int>> hits;
         string str;
         getline(index, str, '\n');
 
@@ -108,12 +348,11 @@ map<int,map<int,vector<int>>> loadInvertedIndex() {
 
         int wordID = stoi(str);
 
-        //loop to read the inverted into the map
         while (true) {
             getline(index, str, '\n');
             if (str == "_") break;
-            int docID = stoi(str);
             vector<int> temp;
+            temp.push_back(stoi(str));
             
             while (true) {
                 getline(index, str, '\n');
@@ -121,24 +360,22 @@ map<int,map<int,vector<int>>> loadInvertedIndex() {
                 temp.push_back(stoi(str));
             }
             
-            //inputting the docID against its hits into the map against its wordID
-            hits.insert({docID,temp});
+            hits.push_back(temp);
         }
         
         invertedIndex.insert({wordID, hits});
     }
-    //returning the fully generated inverted index
+    
     return invertedIndex;
 }
 
-//the function similar to the previous one that reads the shorter barrel into the system
-map<int,map<int,int>> loadSmallInvertedIndex() {
+map<int,vector<vector<int>>> loadSmallInvertedIndex() {
     ifstream index;
     index.open("small_inverted_index.txt");
-    map<int, map<int,int>> smallInvertedIndex;
+    map<int, vector<vector<int>>> smallInvertedIndex;
     
     while (!index.eof()) {
-        map<int,int> fancyHits;
+        vector<vector<int>> fancyHits;
         string str;
         getline(index, str, '\n');
 
@@ -147,6 +384,7 @@ map<int,map<int,int>> loadSmallInvertedIndex() {
         
         int wordID = stoi(str);
         while(true) {
+            vector<int> temp;
             getline(index, str, '\n');
             
             if(str == "_")
@@ -156,12 +394,13 @@ map<int,map<int,int>> loadSmallInvertedIndex() {
             getline(index, str, '\n');
             int count = stoi(str);
             
-            fancyHits.insert({docID,count});
+            temp.push_back(docID);
+            temp.push_back(count);
+            fancyHits.push_back(temp);
         }
         smallInvertedIndex.insert({wordID, fancyHits});
     }
     
-    //returning the fully generated shorter barrel
     return smallInvertedIndex;
 }
 
