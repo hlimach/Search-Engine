@@ -10,6 +10,8 @@
 using namespace std;
 using namespace std::chrono;
 
+void writeForwardIndex(ofstream& index, int docID, map<int,vector<int>> hits);
+
 int main() {
 	//declaring filestreams
 	ifstream file;
@@ -133,50 +135,11 @@ int main() {
 		
 		//writing into output files which are 4 forward index barrels
 		
-		f1index << docID << endl;
-        	for(map<int,vector<int>>::iterator itr = hits1.begin(); itr != hits1.end(); itr++) {
-            		f1index << itr->first << endl;
-            
-            		for(int i = 0; i < itr->second.size(); i++)
-                		f1index << itr->second[i] << endl;
-            
-             		f1index << "." << endl;
-        	}
-        	f1index << "_" << endl;
-        
-        	f2index << docID << endl;
-        	for(map<int,vector<int>>::iterator itr = hits2.begin(); itr != hits2.end(); itr++) {
-            		f2index << itr->first << endl;
-            
-            		for(int i = 0; i < itr->second.size(); i++)
-                		f2index << itr->second[i] << endl;
-            
-             		f2index << "." << endl;
-        	}
-        	f2index << "_" << endl;
-        
-        	f3index << docID << endl;
-        	for(map<int,vector<int>>::iterator itr = hits3.begin(); itr != hits3.end(); itr++) {
-            		f3index << itr->first << endl;
-            
-            		for(int i = 0; i < itr->second.size(); i++)
-                		f3index << itr->second[i] << endl;
-            
-             		f3index << "." << endl;
-        	}
-        	f3index << "_" << endl;
-        
-        	f4index << docID << endl;
-        	for(map<int,vector<int>>::iterator itr = hits4.begin(); itr != hits4.end(); itr++) {
-            		f4index << itr->first << endl;
-            
-            		for(int i = 0; i < itr->second.size(); i++)
-                		f4index << itr->second[i] << endl;
-            
-             		f4index << "." << endl;
-        	}
-        	f4index << "_" << endl;
-
+		writeForwardIndex(f1index, docID, hits1);
+        	writeForwardIndex(f2index, docID, hits2);
+        	writeForwardIndex(f3index, docID, hits3);
+        	writeForwardIndex(f4index, docID, hits4);
+		
 		docID++;
 		file.close();
 	}
@@ -204,4 +167,19 @@ int main() {
     	cout << "Time taken: " << (duration.count()) << " seconds" << endl;
 	
 	return 0;
+}
+
+void writeForwardIndex(ofstream& index, int docID, map<int,vector<int>>hits) {
+    
+    index << docID << endl;
+    for(map<int,vector<int>>::iterator itr = hits.begin(); itr != hits.end(); itr++) {
+        index << itr->first << endl;
+        
+        for(int i = 0; i < itr->second.size(); i++)
+            index << itr->second[i] << endl;
+        
+        index << "." << endl;
+    }
+    index << "_" << endl;
+    
 }
