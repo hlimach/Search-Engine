@@ -10,7 +10,7 @@ using namespace std::chrono;
 
 map<int, vector<vector<int>>> genForwardIndex (ifstream& findex);
 void writeInvertedIndex (ofstream& outputfile, map<int, vector<vector<int>>> invertedIndex); 
-map<int, vector<vector<int>>> genInvertedIndex (map<int, vector<vector<int>>> findex, int limit);
+map<int, vector<vector<int>>> genInvertedIndex (map<int, vector<vector<int>>> findex);
 
 int main() {
 	ifstream lex, fi1, fi2, fi3, fi4;
@@ -56,20 +56,10 @@ int main() {
 	lex.close();
     	cout << "lexicon generated." << endl;
 
-	map<string,int>::reverse_iterator rit = lexicon.rbegin();
-    
-    	for(int i = 0; i < 4; i++) {
-        	if (rit->second % 4 == 0)
-            		i4index = genInvertedIndex(f4index, rit->second);
-        	else if (rit->second % 3 == 0)
-            		i3index = genInvertedIndex(f3index, rit->second);
-        	else if (rit->second % 2 == 0)
-            		i2index = genInvertedIndex(f2index, rit->second);
-        	else
-            		i1index = genInvertedIndex(f1index, rit->second);
-        
-        	rit++;
-    	}	
+    	i4index = genInvertedIndex(f4index);
+    	i3index = genInvertedIndex(f3index);
+    	i2index = genInvertedIndex(f2index);
+    	i1index = genInvertedIndex(f1index);	
 	
 	writeInvertedIndex(ii1, i1index);
     	writeInvertedIndex(ii2, i2index);
@@ -83,13 +73,12 @@ int main() {
 	return 0;
 }
 
-map<int, vector<vector<int>>> genInvertedIndex (map<int, vector<vector<int>>> findex, int limit) {
+map<int, vector<vector<int>>> genInvertedIndex (map<int, vector<vector<int>>> findex) {
     map<int, vector<vector<int>>> invertedIndex;
     
     while(true) {
         vector<vector<int>> updated2dvec;
         map<int, vector<vector<int>>>::iterator itr = findex.begin();
-        cout << "a1" << endl;
         
         if(itr->second.size() == 0) {
             while(itr!=findex.end() && itr->second.size() == 0)
@@ -103,7 +92,6 @@ map<int, vector<vector<int>>> genInvertedIndex (map<int, vector<vector<int>>> fi
         updated2dvec.push_back(itr->second[0]);
         itr->second.erase(itr->second.begin());
         itr++;
-        cout << "a2" << endl;
         
         for(itr; itr != findex.end(); itr++) {
             if(itr->second.size() == 0)
@@ -117,8 +105,6 @@ map<int, vector<vector<int>>> genInvertedIndex (map<int, vector<vector<int>>> fi
         }
         
         invertedIndex.insert({wordID, updated2dvec});
-        if(wordID == limit)
-            break;
         
     }
     cout << "inverted index generated" << endl;
