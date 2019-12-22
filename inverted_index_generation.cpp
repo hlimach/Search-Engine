@@ -9,14 +9,13 @@ using namespace std;
 using namespace std::chrono;
 
 map<int, vector<vector<int>>> genForwardIndex (ifstream& findex);
-void writeInvertedIndex (ofstream& outputfile, map<int, vector<vector<int>>> invertedIndex); 
+void writeInvertedIndex (ofstream& outputfile, ofstream& shortIndex, map<int, vector<vector<int>>> invertedIndex); 
 map<int, vector<vector<int>>> genInvertedIndex (map<int, vector<vector<int>>> findex);
 
 int main() {
-	ifstream lex, fi1, fi2, fi3, fi4;
-    	ofstream ii1, ii2, ii3, ii4;
+	ifstream fi1, fi2, fi3, fi4;
+    	ofstream ii1, ii2, ii3, ii4, shortIndex;
 
-	lex.open("lexicon.txt");
     	fi1.open("f1_index.txt");
     	fi2.open("f2_index.txt");
     	fi3.open("f3_index.txt");
@@ -25,46 +24,29 @@ int main() {
     	ii2.open("inverted_index2.txt");
     	ii3.open("inverted_index3.txt");
     	ii4.open("inverted_index4.txt");
+	shortIndex.open("small_inverted_index.txt");
 
-	if (lex.fail() || fi1.fail() || fi2.fail() || fi3.fail() || fi4.fail()) {
-        	(lex.fail()) ? cout << "Error: Cannot open lexicon file" << endl : cout << "Error: Cannot open forward index files." << endl;
+    	if (fi1.fail() || fi2.fail() || fi3.fail() || fi4.fail()) {
+        	cout << "Error: Cannot open forward index files." << endl;
         	return -1;
     	}
 	
 	auto start = high_resolution_clock::now();
 
-	map<string, int> lexicon;
-    	map<int, vector<vector<int>>> i1index;
-    	map<int, vector<vector<int>>> i2index;
-    	map<int, vector<vector<int>>> i3index;
-    	map<int, vector<vector<int>>> i4index;
     	map<int, vector<vector<int>>> f1index = genForwardIndex(fi1);
     	map<int, vector<vector<int>>> f2index = genForwardIndex(fi2);
     	map<int, vector<vector<int>>> f3index = genForwardIndex(fi3);
     	map<int, vector<vector<int>>> f4index = genForwardIndex(fi4);
 	
-	while (true) {
-		string str, word;
-		getline(lex, word, '\n');
-
-		if (word == ".") 
-			break;
-
-		getline(lex, str, '\n');
-		lexicon.insert({word,stoi(str)});
-	}
-	lex.close();
-    	cout << "lexicon generated." << endl;
-
-    	i4index = genInvertedIndex(f4index);
-    	i3index = genInvertedIndex(f3index);
-    	i2index = genInvertedIndex(f2index);
-    	i1index = genInvertedIndex(f1index);	
+	map<int, vector<vector<int>>> i1index = genInvertedIndex(f1index);
+    	map<int, vector<vector<int>>> i2index = genInvertedIndex(f2index);
+    	map<int, vector<vector<int>>> i3index = genInvertedIndex(f3index);
+    	map<int, vector<vector<int>>> i4index = genInvertedIndex(f4index);
 	
-	writeInvertedIndex(ii1, i1index);
-    	writeInvertedIndex(ii2, i2index);
-    	writeInvertedIndex(ii3, i3index);
-    	writeInvertedIndex(ii4, i4index);
+	writeInvertedIndex(ii1, shortIndex, i1index);
+    	writeInvertedIndex(ii2, shortIndex, i2index);
+    	writeInvertedIndex(ii3, shortIndex, i3index);
+    	writeInvertedIndex(ii4, shortIndex, i4index);
 	
 	auto stop = high_resolution_clock::now();
     	auto duration = duration_cast<seconds>(stop - start);
@@ -132,13 +114,18 @@ map<int, vector<vector<int>>> genForwardIndex (ifstream& findex) {
 
             while (true) {
                 getline(findex, str, '\n');
-                if (str == "." || str =="_") break;
+		    
+                if (str == "." || str =="_") 
+			break;
+		    
                 int x = stoi(str);
                 temp.push_back(x);
             }
 
             //every 2d vector ends with _ so once it is reached must be pushed into vec2d
-            if (str == "_") break;
+            if (str == "_") 
+		    break;
+		
             vec2d.push_back(temp);
         }
 
@@ -153,8 +140,10 @@ map<int, vector<vector<int>>> genForwardIndex (ifstream& findex) {
     return forwardIndex;
 }
 
-void writeInvertedIndex (ofstream& outputfile, map<int, vector<vector<int>>> invertedIndex) {
+void writeInvertedIndex (ofstream& outputfile, ofstream& shortIndex, map<int, vector<vector<int>>> invertedIndex) {
+    
     for(map<int, vector<vector<int>>>:: iterator itr = invertedIndex.begin(); itr != invertedIndex.end(); itr++) {
+        bool insertion = true;
         outputfile << itr->first << endl;
         for (int j = 0; j < itr->second.size(); j++) {
             for (int k = 0; k < itr->second[j].size(); k++) {
@@ -162,7 +151,29 @@ void writeInvertedIndex (ofstream& outputfile, map<int, vector<vector<int>>> inv
             }
             //every entry of the vector is separated by a fullstop
             outputfile << "." << endl;
+            
+            int count = 1;
+            if(itr->second[j][count] == -1) {
+                count++;
+                
+                while(itr->second[j][count] == -1)
+                    count++;
+                
+                if(insertion) {
+                    shortIndex << itr->first << endl;
+                    insertion = false;
+                }
+                
+                shortIndex << itr->second[j][0] << endl << count-1 << endl;
+            }
+            
         }
+        
         outputfile << "_" << endl;
+        
+        if(!insertion)
+            shortIndex << "_" << endl;
+        
     }
+    
 }
