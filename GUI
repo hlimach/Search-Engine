@@ -1,3 +1,4 @@
+#include <iostream>
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
@@ -6,75 +7,156 @@
 #include <FL/Fl_Image.H>
 #include <FL/Fl_Menu_Item.H>
 #include <FL/Fl_Menu_Bar.H>
+#include <FL/Fl_Slider.H>
+#include <FL/Fl_Value_Slider.H>
+#include <FL/Fl_Value_Input.H>
+#include "String"
+#include <FL/Fl_Multiline_Output.H>
 
-void quit_cb(Fl_Widget*, void*) { /*exit(0); */ }
-
-Fl_Menu_Item Author[] = {
-  {"&Author",0,0,0,FL_SUBMENU},
-	{"&a", 0, 0},
-	{"&b",  0, 0},
-	{"&c", 0, 0},
-	{0},
-  };
+void make_result();
+void make_window();
+void make_result();
+using namespace std;
 
 Fl_Menu_Item Publisher[] = {
   {"&Publisher",0,0,0,FL_SUBMENU},
-	{"&a", 0, 0},
-	{"&b",  0, 0},
-	{"&c", 0, 0},
-	{0},
-};
-
-Fl_Menu_Item Date[] = {
-  {"&Date",0,0,0,FL_SUBMENU},
-	{"&a", 0, 0},
-	{"&b",  0, 0},
-	{"&c", 0, 0},
+	{"&New York Times", 0, 0},
+	{"&Breitbart",  0, 0},
+	{"&CNN", 0, 0},
+	{"&Business Insider", 0, 0},
+	{"&the Atlantic",  0, 0},
+	{"&Fox News", 0, 0},
+	{"&Talking Points Memo", 0, 0},
+	{"&Buzzfeed News",  0, 0},
+	{"&National Review", 0, 0},
+	{"&New York Post", 0, 0},
+	{"&the Guardian",  0, 0},
+	{"&NPR", 0, 0},
+	{"&Reuters", 0, 0},
+	{"&Vox", 0, 0},
+	{"&the Washington Post", 0, 0},
 	{0},
 };
 
 Fl_Menu_Item Year[] = {
   {"&Year",0,0,0,FL_SUBMENU},
-	{"&a", 0, 0},
-	{"&b",  0, 0},
-	{"&c", 0, 0},
+	{"&2011", 0, 0},
+	{"&2012",  0, 0},
+	{"&2013", 0, 0},
+	{"&2014", 0, 0},
+	{"&2015",  0, 0},
+	{"&2016", 0, 0},
+	{"&2017", 0, 0},
 	{0},
 };
 
+Fl_Menu_Item Month[] = {
+	  {"&Month",0,0,0,FL_SUBMENU},
+		{"&January", 0, 0},
+		{"&February", 0, 0},
+		{"&March", 0, 0},
+		{"&April", 0, 0},
+		{"&May", 0, 0},
+		{"&June", 0, 0},
+		{"&July", 0, 0},
+		{"&August", 0, 0},
+		{"&September", 0, 0},
+		{"&October", 0, 0},
+		{"&November", 0, 0},
+		{"&December", 0, 0},
+		{0},
+};
 
-int main(int argc, char **argv) {
+void button_search(Fl_Widget* obj, void*) {
+	make_result();
+}
 
-	Fl_Window window(600, 300 , "Search Engine");
-	window.color(FL_WHITE);
+void button_prev(Fl_Widget* obj, void* page) {
+};
+
+void button_next(Fl_Widget* obj, void*) {	
+}
+
+void make_window() {
+
+	Fl_Window *window = new Fl_Window(600, 300, "Search Engine");
 	
-	Fl_Menu_Bar author(100, 150,70, 30);
-	author.menu(Author);
-	Fl_Menu_Bar publisher(200, 150, 80, 30);
-	publisher.menu(Publisher);
-	Fl_Menu_Bar date(310, 150, 50, 30);
-	date.menu(Date);
-	Fl_Menu_Bar year(390, 150, 50, 30);
-	year.menu(Year);
+	window->begin();
+	
+	window->color(FL_WHITE);
+	
+	Fl_Box *title = new Fl_Box(250, 20, 100, 100, "SEARCH NEWS");
+	title->box(FL_NO_BOX);
+	title->labelfont(FL_BOLD);
+	title->labelsize(30);
+	title->labeltype(FL_SHADOW_LABEL);
+	
+	Fl_Button *search = new Fl_Button(500, 100, 70, 30, "SEARCH");
+	search->box(FL_UP_BOX);
+	search->labelfont(FL_BOLD);
+	search->labelsize(12);
+	search->labelcolor(fl_rgb_color(162, 60, 20));
+	
+	Fl_Menu_Bar *pub = new Fl_Menu_Bar(100, 150, 80, 30);
+	pub->menu(Publisher);
+	Fl_Menu_Bar *mon = new Fl_Menu_Bar(210, 150, 60, 30);
+	mon->menu(Month);
+	Fl_Menu_Bar *yr = new Fl_Menu_Bar(300, 150, 50, 30);
+	yr->menu(Year);
+	
+	Fl_Input *input = new Fl_Input(100, 100, 350, 30);
+	input->value("Input your search query");
+	
+	window->end();
+	
+	search->callback((Fl_Callback*)button_search);
+	
+	window->show();
+}
 
-	Fl_Box *box = new Fl_Box(250, 20, 100, 100, "SEARCH NEWS");
+void make_result() {
+
+	Fl_Window *results = new Fl_Window(600, 600, "Search Results");
+	
+	results->begin();
+	
+	results->color(FL_WHITE);
+	
+	Fl_Box *box = new Fl_Box(100, 10, 100, 100, "SEARCH NEWS");
 	box->box(FL_NO_BOX);
 	box->labelfont(FL_BOLD);
 	box->labelsize(30);
 	box->labeltype(FL_SHADOW_LABEL);
+	
+	Fl_Box *best = new Fl_Box(80, 40, 100, 100, "Best Matched Documents");
+	best->box(FL_NO_BOX);
+	best->labelsize(17);
+	
+	Fl_Box *page = new Fl_Box(440, 40, 20, 30, "4");
+	page->box(FL_DOWN_BOX);
+	page->color(FL_WHITE);
+	page->labelsize(12);
+	
+	Fl_Button *prev = new Fl_Button(380, 40, 50, 30, "PREV");
+	prev->box(FL_UP_BOX);
+	prev->labelsize(12);
+	prev->labelcolor(fl_rgb_color(162, 60, 20));
+	
+	Fl_Button *next = new Fl_Button(470, 40, 50, 30, "NEXT");
+	next->box(FL_UP_BOX);
+	next->labelsize(12);
+	next->labelcolor(fl_rgb_color(162, 60, 20));
+	
+	Fl_Slider *slider = new Fl_Slider(500, 300, 20, 200);
 
-	Fl_Button *search = new Fl_Button(500,100, 70, 30, "SEARCH");
-	search->box(FL_UP_BOX);
-	search->labelfont(FL_BOLD);
-	search->labelsize(12);
-	search->labeltype(FL_SHADOW_LABEL);
-	search->labelcolor(fl_rgb_color(162, 60, 20));
+	results->end();
+	prev->callback((Fl_Callback*)button_prev, page);
+	//setting up window
+	results->show();
 
-	//Fl_Image title = new FL_Image("../data/title.jpg");
+}
 
-	Fl_Input *input = new Fl_Input(100, 100,350 , 30);
-	input->value("Input your search query");
-
-	window.end();
-	window.show(argc, argv);
+int main(int argc, char **argv) {
+	make_window();
 	return Fl::run();
 }
