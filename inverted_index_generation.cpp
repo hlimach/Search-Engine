@@ -3,8 +3,10 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
 
 int main() {
 	ifstream lex, forwardindex;
@@ -19,6 +21,8 @@ int main() {
         	(lex.fail()) ? cout << "Error: Cannot open lexicon file" << endl : cout << "Error: Cannot open forward index file." << endl;
         	return -1;
     	}
+	
+	auto start = high_resolution_clock::now();
 
 	map<string, int> lexicon;
 	map<int, map<int,vector<int>>> findex;
@@ -33,6 +37,9 @@ int main() {
 		getline(lex, str, '\n');
 		lexicon.insert({word,stoi(str)});
 	}
+	
+	lex.close();
+    	cout << "lexicon read" << endl;
 
 	while (!forwardindex.eof()) {
 		map<int,vector<int>> hits;
@@ -68,6 +75,9 @@ int main() {
         	findex.insert({docID, hits});
 	}
 	
+	forwardindex.close();
+    	cout << "forward index read" << endl;
+	
 	map<int, vector<vector<int>>>::iterator top = findex.begin();
 	map<string, int>::iterator lexi;
 	
@@ -76,10 +86,11 @@ int main() {
 		map<int,int> temp;
         
         	while (top != findex.end()) {
-
-            		if (top->second.find(lexi->second) != top->second.end())
-                		updatedhits.insert({top->first, top->second.find(lexi->second)->second});
-            
+            		map<int,vector<int>>::iterator target = top->second.find(lexi->second);
+            		if (target != top->second.end()) {
+                		updatedhits.insert({top->first, target->second});
+                		top->second.erase(target);
+            		}
             		top++;
         	}
 
@@ -122,10 +133,17 @@ int main() {
 			
 		top = findex.begin();
 	}
-
+	
+	auto stop = high_resolution_clock::now();
+    	auto duration = duration_cast<seconds>(stop - start);
+    
+    	cout << "Time taken: " << (duration.count()) << " seconds" << endl;
+	
 	findex.clear();
-	outputfile.close();
+	mainIndex.close();
+    	shortIndex.close();
+		
 	cout << "Inverted index generated." << endl;
-
+	cout << "Small Inverted index generated." << endl;
 	return 0;
 }
