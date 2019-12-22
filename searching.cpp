@@ -13,11 +13,9 @@ map<string,int> loadLexicon();
 map<int,vector<vector<int>>> loadInvertedIndex(string filename);
 map<int,vector<vector<int>>> loadSmallInvertedIndex();
 vector<vector<int>> singlewordSearch(int wordID, map<int,vector<vector<int>>> smallInvertedIndex, map<int,vector<vector<int>>> invertedIndex);
-vector<int> multiwordSearch(string str);
-void displayResults(vector<vector<int>> finalplain);
 
 int main() {
-    
+
     map<string,int> lexicon = loadLexicon();
     cout << "lex" << endl;
     map<int,vector<vector<int>>> invertedIndex1 = loadInvertedIndex("inverted_index1.txt");
@@ -31,231 +29,35 @@ int main() {
     map<int,vector<vector<int>>> smallInvertedIndex =  loadSmallInvertedIndex();
     cout << "sii" << endl;
     
-    while(true) {
-        string word, str;
-        vector<string> query;
+    while(true){
+    string word, str;
+    
+    cout << "Enter a word (-1 to exit) : " << endl;
+    cin >> word;
         
-        cout << "Enter any word (enter -1 to end):" << endl;
-        cin >> str;
-        str = str + " ";
-        if(str == "-1")
-            break;
-        
-        transform(str.begin(), str.end(), str.begin(), ::tolower);
-        istringstream iss(str);
-        
-        while(getline(iss,word,' ')) {
-            query.push_back(word);
-        }
-        
-        cout << query.size() << endl;
-        for (int i = 0; i < query.size(); i++)
-            cout << query[i] << " " << endl;
-        
-        if(query.size() > 1) {
-            vector<int> wordIDs;
-            vector<vector<int>> fdocIDs, pdocIDs;
+        if(word == "-1") break;
+    if (lexicon.find(word) != lexicon.end()) {
+        vector<vector<int>> docIDs;
+        int wordID = lexicon.find(word)->second;
             
-            for(int i = 0; i < query.size(); i++) {
+        if (wordID % 4 == 0)
+            docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex4);
+        else if (wordID % 3 == 0)
+            docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex3);
+        else if (wordID % 2 == 0)
+            docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex2);
+        else
+            docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex1);
                 
-                if(lexicon.find(query[i]) == lexicon.end()) {
-                    cout << "Words entered in query do not match any Documents!" << endl;
-                    wordIDs.clear();
-                    break;
-                }
-                else
-                    wordIDs.push_back(lexicon.find(query[i])->second);
-            }
-            
-            if(wordIDs.size() != 0) {
-                
-                int count = 0;
-                for (int i = 0; i < wordIDs.size(); i++) {
-                    if (wordIDs[i] % 4 == 0) {
-                        
-                        for(int j = 0; j < smallInvertedIndex.find(wordIDs[i])->second.size(); j++)
-                            fdocIDs.push_back(smallInvertedIndex.find(wordIDs[i])->second[j]);
-                        
-                        if(count == 0) {
-                            for(int j = 0; j < invertedIndex4.find(wordIDs[i])->second.size(); j++)
-                                pdocIDs.push_back(invertedIndex4.find(wordIDs[i])->second[j]);
-                            count++;
-                        }
-                        else {
-                            for(int k = 0; k < pdocIDs.size(); k++) {
-                                bool eq = false;
-                                for (int j = 0; j < invertedIndex4.find(wordIDs[i])->second.size(); j++) {
-                                    if(pdocIDs[k][0] == invertedIndex4.find(wordIDs[i])->second[j][0]){
-                                        pdocIDs.push_back(invertedIndex4.find(wordIDs[i])->second[j]);
-                                        eq = true;
-                                    }
-                                }
-                                if(!eq)
-                                    pdocIDs.erase(pdocIDs.begin() + k);
-                            }
-                        }
-                            
-                    }
-                    
-                    else if (wordIDs[i] % 3 == 0) {
-                        
-                        for(int j = 0; j < smallInvertedIndex.find(wordIDs[i])->second.size(); j++)
-                            fdocIDs.push_back(smallInvertedIndex.find(wordIDs[i])->second[j]);
-                        
-                        if(count == 0) {
-                            for(int j = 0; j < invertedIndex3.find(wordIDs[i])->second.size(); j++)
-                                pdocIDs.push_back(invertedIndex3.find(wordIDs[i])->second[j]);
-                            count++;
-                        }
-                        else {
-                            for(int k = 0; k < pdocIDs.size(); k++) {
-                                bool eq = false;
-                                for (int j = 0; j < invertedIndex3.find(wordIDs[i])->second.size(); j++) {
-                                    if(pdocIDs[k][0] == invertedIndex3.find(wordIDs[i])->second[j][0]){
-                                        pdocIDs.push_back(invertedIndex3.find(wordIDs[i])->second[j]);
-                                        eq = true;
-                                    }
-                                }
-                                if(!eq)
-                                    pdocIDs.erase(pdocIDs.begin() + k);
-                            }
-                        }
-                        
-                    }
-                    else if (wordIDs[i] % 2 == 0) {
-                        
-                        for(int j = 0; j < smallInvertedIndex.find(wordIDs[i])->second.size(); j++)
-                            fdocIDs.push_back(smallInvertedIndex.find(wordIDs[i])->second[j]);
-                        
-                        if(count == 0) {
-                            for(int j = 0; j < invertedIndex2.find(wordIDs[i])->second.size(); j++)
-                                pdocIDs.push_back(invertedIndex2.find(wordIDs[i])->second[j]);
-                            count++;
-                        }
-                        else {
-                            for(int k = 0; k < pdocIDs.size(); k++) {
-                                bool eq = false;
-                                for (int j = 0; j < invertedIndex2.find(wordIDs[i])->second.size(); j++) {
-                                    if(pdocIDs[k][0] == invertedIndex2.find(wordIDs[i])->second[j][0]){
-                                        pdocIDs.push_back(invertedIndex2.find(wordIDs[i])->second[j]);
-                                        eq = true;
-                                    }
-                                }
-                                if(!eq)
-                                    pdocIDs.erase(pdocIDs.begin() + k);
-                            }
-                        }
-                        
-                    }
-                    
-                    else {
-                        
-                        for(int j = 0; j < smallInvertedIndex.find(wordIDs[i])->second.size(); j++)
-                            fdocIDs.push_back(smallInvertedIndex.find(wordIDs[i])->second[j]);
-                        
-                        if(count == 0) {
-                            for(int j = 0; j < invertedIndex1.find(wordIDs[i])->second.size(); j++)
-                                pdocIDs.push_back(invertedIndex1.find(wordIDs[i])->second[j]);
-                            count++;
-                        }
-                        else {
-                            for(int k = 0; k < pdocIDs.size(); k++) {
-                                bool eq = false;
-                                for (int j = 0; j < invertedIndex1.find(wordIDs[i])->second.size(); j++) {
-                                    if(pdocIDs[k][0] == invertedIndex1.find(wordIDs[i])->second[j][0]){
-                                        pdocIDs.push_back(invertedIndex1.find(wordIDs[i])->second[j]);
-                                        eq = true;
-                                    }
-                                }
-                                if(!eq)
-                                    pdocIDs.erase(pdocIDs.begin() + k);
-                            }
-                        }
-                    }
-                    
-                }
-                
-                vector<int> finalfancy;
-                
-                for(int i = 0; i < fdocIDs.size()/2 + 1; i++) {
-                    for (int j = i+1; j < fdocIDs.size(); j++) {
-                        if (fdocIDs[i][0] == fdocIDs[j][0]) {
-                            finalfancy.push_back(fdocIDs[i][0]);
-                            fdocIDs.erase(fdocIDs.begin() + j);
-                            break;
-                        }
-                    }
-                }
-                
-                vector<vector<int>> freq;
-                for(int i = 0; i < pdocIDs.size(); i++) {
-                    freq.push_back(vector<int>());
-                    int count = pdocIDs[i].size();
-                    for (int j = i+1; j < pdocIDs.size(); j++) {
-                        if (pdocIDs[i][0] == pdocIDs[j][0]) {
-                            count += pdocIDs[j].size();
-                        }
-                    }
-                    freq[i].push_back(pdocIDs[i][0]);
-                    freq[i].push_back(count);
-                }
-                
-                //now i have finalized plain and fancy docs
-                //i should list fancy as is, and compare plain
-                
-                for (int i = 0; i < finalfancy.size(); i++)
-                    cout << finalfancy[i] << endl;
-                
-                bool swapped;
-                for (int i = 0; i < freq.size(); i++) {
-                   swapped = false;
-                   for (int j = 0; j < freq.size()-1; j++) {
-                       
-                      if (freq[j][1] > freq[j+1][1]) {
-                         swap(freq[j], freq[j+1]);
-                         swapped = true;
-                      }
-                       
-                   }
-                
-                   if (swapped == false)
-                      break;
-                }
-                
-                for (int i = 0; i < freq.size(); i++)
-                    cout << freq[i][0] << endl;
-                
-            }
-            
+        cout << "Documents with your query: " << endl;
+        for(int i = 0; i < docIDs.size(); i++)
+            cout << docIDs[i][0] << endl;
             
         }
+        
         else {
-            
-            if (lexicon.find(word) != lexicon.end()) {
-                vector<vector<int>> docIDs;
-                int wordID = lexicon.find(word)->second;
-                
-                if (wordID % 4 == 0)
-                    docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex4);
-                else if (wordID % 3 == 0)
-                    docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex3);
-                else if (wordID % 2 == 0)
-                    docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex2);
-                else
-                    docIDs = singlewordSearch(wordID, smallInvertedIndex, invertedIndex1);
-                    
-                cout << "Documents with your query: " << endl;
-                for(int i = 0; i < docIDs.size(); i++)
-                    cout << docIDs[i][0] << endl;
-                
-            }
-            
-            else {
-                cout << "No matching results found!" << endl;
-            }
-            
+            cout << "No matching results found!" << endl;
         }
-        
     }
 }
 
