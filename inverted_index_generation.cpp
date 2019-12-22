@@ -8,24 +8,40 @@
 using namespace std;
 using namespace std::chrono;
 
+map<int, vector<vector<int>>> genForwardIndex (ifstream& findex);
+void writeInvertedIndex (ofstream& outputfile, map<int, vector<vector<int>>> invertedIndex); 
+map<int, vector<vector<int>>> genInvertedIndex (map<int, vector<vector<int>>> findex, int limit);
+
 int main() {
-	ifstream lex, forwardindex;
-	ofstream mainIndex, shortIndex;
+	ifstream lex, fi1, fi2, fi3, fi4;
+    	ofstream ii1, ii2, ii3, ii4;
 
 	lex.open("lexicon.txt");
-	forwardindex.open("forward_index.txt");
-	mainIndex.open("inverted_index.txt");
-    	shortIndex.open("small_inverted_index.txt");
+    	fi1.open("f1_index.txt");
+    	fi2.open("f2_index.txt");
+    	fi3.open("f3_index.txt");
+    	fi4.open("f4_index.txt");
+    	ii1.open("inverted_index1.txt");
+    	ii2.open("inverted_index2.txt");
+    	ii3.open("inverted_index3.txt");
+    	ii4.open("inverted_index4.txt");
 
-	if (lex.fail() || forwardindex.fail()) {
-        	(lex.fail()) ? cout << "Error: Cannot open lexicon file" << endl : cout << "Error: Cannot open forward index file." << endl;
+	if (lex.fail() || fi1.fail() || fi2.fail() || fi3.fail() || fi4.fail()) {
+        	(lex.fail()) ? cout << "Error: Cannot open lexicon file" << endl : cout << "Error: Cannot open forward index files." << endl;
         	return -1;
     	}
 	
 	auto start = high_resolution_clock::now();
 
 	map<string, int> lexicon;
-	map<int, map<int,vector<int>>> findex;
+    	map<int, vector<vector<int>>> i1index;
+    	map<int, vector<vector<int>>> i2index;
+    	map<int, vector<vector<int>>> i3index;
+    	map<int, vector<vector<int>>> i4index;
+    	map<int, vector<vector<int>>> f1index = genForwardIndex(fi1);
+    	map<int, vector<vector<int>>> f2index = genForwardIndex(fi2);
+    	map<int, vector<vector<int>>> f3index = genForwardIndex(fi3);
+    	map<int, vector<vector<int>>> f4index = genForwardIndex(fi4);
 	
 	while (true) {
 		string str, word;
@@ -37,113 +53,130 @@ int main() {
 		getline(lex, str, '\n');
 		lexicon.insert({word,stoi(str)});
 	}
-	
 	lex.close();
-    	cout << "lexicon read" << endl;
+    	cout << "lexicon generated." << endl;
 
-	while (!forwardindex.eof()) {
-		map<int,vector<int>> hits;
-		string str;
-		getline(forwardindex, str, '\n');
-
-		if (str == "") 
-			break;
-
-		int docID = stoi(str);
-
-		while (true) {
-			getline(forwardindex, str, '\n');
-			
-            		if (str == "_") 
-				break;
-			
-            		int wordID = stoi(str);
-            		vector<int> temp;
-            
-            		while (true) {
-                		getline(forwardindex, str, '\n');
-				
-                		if (str == "." || str == "_") 
-					break;
-				
-                		temp.push_back(stoi(str));
-            		}
-            
-            		hits.insert({wordID,temp});
-        	}
+	map<string,int>::reverse_iterator rit = lexicon.rbegin();
+    
+    	for(int i = 0; i < 4; i++) {
+        	if (rit->second % 4 == 0)
+            		i4index = genInvertedIndex(f4index, rit->second);
+        	else if (rit->second % 3 == 0)
+            		i3index = genInvertedIndex(f3index, rit->second);
+        	else if (rit->second % 2 == 0)
+            		i2index = genInvertedIndex(f2index, rit->second);
+        	else
+            		i1index = genInvertedIndex(f1index, rit->second);
         
-        	findex.insert({docID, hits});
-	}
+        	rit++;
+    	}	
 	
-	forwardindex.close();
-    	cout << "forward index read" << endl;
-	
-	map<int, vector<vector<int>>>::iterator top = findex.begin();
-	map<string, int>::iterator lexi;
-	
-	for (lexi = lexicon.begin(); lexi != lexicon.end(); lexi++) {
-		map<int,vector<int>> updatedhits;
-		map<int,int> temp;
-        
-        	while (top != findex.end()) {
-            		map<int,vector<int>>::iterator target = top->second.find(lexi->second);
-            		if (target != top->second.end()) {
-                		updatedhits.insert({top->first, target->second});
-                		top->second.erase(target);
-            		}
-            		top++;
-        	}
-
-        	int count = 0;
-        	mainIndex << lexi->second << endl;
-        	bool insertion = true;
-
-        	for(map<int,vector<int>>::iterator itr = updatedhits.begin(); itr != updatedhits.end(); itr++) {
-            		itr != updatedhits.end(); itr++) {
-            		mainIndex << itr->first << endl;
-            
-            		for(int i = 0; i < itr->second.size(); i++)
-                		mainIndex << itr->second[i] << endl;
-				
-			if(itr->second.size() != 0) {
-                		count = 0;
-                		if(itr->second[count] == -1) {
-                    			count++;
-                
-                    			while(itr->second[count] == -1)
-                        			count++;
-                    
-                    			if(insertion) {
-                        			shortIndex << lexi->second << endl;
-                        			insertion = false;
-                   			}
-                    
-                    			shortIndex << itr->first << endl << count << endl;
-                		}
-                
-            		}
-            
-             		mainIndex << "." << endl;
-        	}
-        
-        	mainIndex << "_" << endl;
-        
-        	if(!insertion)
-            		shortIndex << "_" << endl;
-			
-		top = findex.begin();
-	}
+	writeInvertedIndex(ii1, i1index);
+    	writeInvertedIndex(ii2, i2index);
+    	writeInvertedIndex(ii3, i3index);
+    	writeInvertedIndex(ii4, i4index);
 	
 	auto stop = high_resolution_clock::now();
     	auto duration = duration_cast<seconds>(stop - start);
-    
     	cout << "Time taken: " << (duration.count()) << " seconds" << endl;
-	
-	findex.clear();
-	mainIndex.close();
-    	shortIndex.close();
-		
-	cout << "Inverted index generated." << endl;
-	cout << "Small Inverted index generated." << endl;
+
 	return 0;
+}
+
+map<int, vector<vector<int>>> genInvertedIndex (map<int, vector<vector<int>>> findex, int limit) {
+    map<int, vector<vector<int>>> invertedIndex;
+    
+    while(true) {
+        vector<vector<int>> updated2dvec;
+        map<int, vector<vector<int>>>::iterator itr = findex.begin();
+        cout << "a1" << endl;
+        
+        if(itr->second.size() == 0) {
+            while(itr!=findex.end() && itr->second.size() == 0)
+                    itr++;
+            if (itr == findex.end())
+                break;
+        }
+        
+        int wordID = itr->second[0][0];
+        itr->second[0][0] = itr->first;
+        updated2dvec.push_back(itr->second[0]);
+        itr->second.erase(itr->second.begin());
+        itr++;
+        cout << "a2" << endl;
+        
+        for(itr; itr != findex.end(); itr++) {
+            if(itr->second.size() == 0)
+                continue;
+            
+            if(itr->second[0][0] == wordID) {
+                itr->second[0][0] = itr->first;
+                updated2dvec.push_back(itr->second[0]);
+                itr->second.erase(itr->second.begin());
+            }
+        }
+        
+        invertedIndex.insert({wordID, updated2dvec});
+        if(wordID == limit)
+            break;
+        
+    }
+    cout << "inverted index generated" << endl;
+    return invertedIndex;
+}
+
+
+map<int, vector<vector<int>>> genForwardIndex (ifstream& findex) {
+    map<int, vector<vector<int>>> forwardIndex;
+
+    while (!findex.eof()) {
+        vector<vector<int>> vec2d;
+        string str;
+        getline(findex, str, '\n');
+
+        //last entry in forward_index.txt is endl so when str is empty the loop breaks
+        if (str == "") break;
+
+        //first entry is always docID
+        int docID = stoi(str);
+
+        while (true) {
+            //temp vector to store rows of 2d vector from forward index
+            vector<int> temp;
+
+            while (true) {
+                getline(findex, str, '\n');
+                if (str == "." || str =="_") break;
+                int x = stoi(str);
+                temp.push_back(x);
+            }
+
+            //every 2d vector ends with _ so once it is reached must be pushed into vec2d
+            if (str == "_") break;
+            vec2d.push_back(temp);
+        }
+
+        //once vec2d finalized for a docID, it is inserted into findex
+        forwardIndex.insert({docID, vec2d});
+
+    }
+    
+    findex.close();
+    cout << "forward index file read." << endl;
+    
+    return forwardIndex;
+}
+
+void writeInvertedIndex (ofstream& outputfile, map<int, vector<vector<int>>> invertedIndex) {
+    for(map<int, vector<vector<int>>>:: iterator itr = invertedIndex.begin(); itr != invertedIndex.end(); itr++) {
+        outputfile << itr->first << endl;
+        for (int j = 0; j < itr->second.size(); j++) {
+            for (int k = 0; k < itr->second[j].size(); k++) {
+                outputfile << itr->second[j][k] << endl;
+            }
+            //every entry of the vector is separated by a fullstop
+            outputfile << "." << endl;
+        }
+        outputfile << "_" << endl;
+    }
 }
