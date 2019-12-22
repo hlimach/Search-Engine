@@ -1,3 +1,5 @@
+*/the front end of the system is created by including the c++ library FLTK. The FastLight Toolkit library is a light weight GUI 
+library which is used to present the interface of the search engine. All the widgets that are included are from this library*/
 #include <iostream>
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
@@ -21,15 +23,19 @@
 #include <sstream>
 #include <map>
 
+//function declarations for creating windows 
 void make_result();
 void make_window();
 void make_result();
 void make_start();
 void make_intWindow();
+
 int doc;
+
 using namespace std;
 
 //creating drop down menus
+//dropdown menu for the publisher name
 Fl_Menu_Item Publisher[] = {
   {"&Publisher",0,0,0,FL_SUBMENU},
 	{"&New York Times", 0,0},
@@ -50,6 +56,7 @@ Fl_Menu_Item Publisher[] = {
 	{0},
 };
 
+//dropdown menu for the year of publishing
 Fl_Menu_Item Year[] = {
   {"&Year",0,0,0,FL_SUBMENU},
 	{"&2011", 0, 0},
@@ -62,6 +69,7 @@ Fl_Menu_Item Year[] = {
 	{0},
 };
 
+//dropdown menu for the month of publishing
 Fl_Menu_Item Month[] = {
 	  {"&Month",0,0,0,FL_SUBMENU},
 		{"&January", 0, 0},
@@ -79,11 +87,13 @@ Fl_Menu_Item Month[] = {
 		{0},
 };
 
+//declaring constants that will be used for the creation of the scroll that is used to display search results.
 const int fixedWidth = 100;
 const int defaultHeight = 20;
 
+//creating a scroll class that will help implement the dynamically generating slider and output 
 class ScrollItem : public Fl_Group {
-	// the title and author that appear in the scroll menu
+	// the title, docID, and date that appear in the scroll menu
 	Fl_Box *docID;
 	Fl_Box *date;
 	Fl_Box *title;
@@ -97,7 +107,7 @@ public:
 		docID->box(FL_THIN_DOWN_FRAME);
 
 
-		// date published
+		// fixed date published box
 		date = new Fl_Box(X + fixedWidth, Y, fixedWidth, defaultHeight, "date");
 		date->box(FL_THIN_DOWN_FRAME);
 
@@ -141,42 +151,48 @@ public:
 	}
 };
 
+//creating a function that will open the file from the result
 void file_reader(int docID) {
 	string topicName = "notepad \"" + to_string(docID) + "\"";
 	system(topicName.c_str());
 }
 
-
+//creating the search button event for the main window
 void button_search(Fl_Widget* obj, void* window) {
 	Fl_Window *win = (Fl_Double_Window*)window;
 	win->hide();
 	make_result();
 };
 
+creating a previous button event for the results window
 void button_prev(Fl_Widget* obj, void* res) {
 	Fl_Double_Window *result = (Fl_Double_Window*)res;
 	result->hide();
 	make_window();
 };
 
+//creating a start button event for the first window that leads to the search window
 void button_start(Fl_Widget* obj, void* start) {
 	Fl_Window *str = (Fl_Window*)start;
 	str->hide();
 	make_window();
 };
 
+//creating a back button for the search window that leads back to first page
 void button_back(Fl_Widget* obj, void* window) {
 	Fl_Window *win = (Fl_Window*)window;
 	win->hide();
 	make_start();
 };
 
+//creating the back button for the interface window
 void button_intback(Fl_Widget* obj, void* window) {
 	Fl_Window *intwin = (Fl_Window*)window;
 	intwin->hide();
 	make_start();
 };
 
+//creating add files button for interface window
 void button_addfiles (Fl_Widget* obj, void* window) {
 	Fl_Window *win = (Fl_Window*)window;
 	win->hide();
@@ -189,6 +205,7 @@ void add_cb(Fl_Widget*, void *data) {
 	scroll->AddItem();
 }
 
+//the initial window
 void make_start() {
 	//creating window
 	Fl_Window *start = new Fl_Window(600, 300, "Search Engine");
@@ -231,6 +248,7 @@ void make_start() {
 	start->show();
 }
 
+//the interface window for adding new files
 void make_intWindow() {
 
 	//creating window
@@ -276,6 +294,8 @@ void make_intWindow() {
 	//setting up window
 	intwindow->show();
 }
+
+//the search window
 void make_window() {
 	//creating window
 	Fl_Window *window = new Fl_Window(600, 300, "Search Engine");
@@ -329,6 +349,7 @@ void make_window() {
 	window->show();
 }
 
+//the results window to display search results
 void make_result() {
 
 	//creating the output window
@@ -375,6 +396,7 @@ void make_result() {
 
 }
 
+//running the program through main
 int main(int argc, char **argv) {
 	make_start();
 	return Fl::run();
