@@ -10,79 +10,29 @@
 #include <FL/Fl_Slider.H>
 #include <FL/Fl_Value_Slider.H>
 #include <FL/Fl_Value_Input.H>
-#include "String"
 #include <FL/Fl_Multiline_Output.H>
 #include <FL/Fl_Double_Window.H>
 #include <FL/Fl_Group.H>
 #include <FL/Fl_Scroll.H>
+#include <algorithm>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <sstream>
+#include <map>
 
 void make_result();
 void make_window();
 void make_result();
 void make_start();
 void make_intWindow();
-
+int doc;
 using namespace std;
-
-const int fixedWidth = 100;
-const int defaultHeight = 20;
-
-class ScrollItem : public Fl_Group {
-	// the title and author that appear in the scroll menu
-	Fl_Box *title;
-	Fl_Box *author;
-
-public:
-	ScrollItem(int X, int Y, int W, int H, const char* L = 0) : Fl_Group(X, Y, W, H, L) {
-		begin();
-		// Fixed width box
-		title = new Fl_Box(X, Y, fixedWidth, defaultHeight, "Title");
-		title->box(FL_UP_BOX);
-
-		// author
-		author = new Fl_Box(X + fixedWidth, Y, W - fixedWidth, defaultHeight, "Author");
-		author->box(FL_UP_BOX);
-		resizable(author);
-		end();
-	}
-};
-
-class MyScroll : public Fl_Scroll {
-	// Custom scroll that tells children to follow scroll's width when resized
-	int nchild;
-public:
-	MyScroll(int X, int Y, int W, int H, const char* L = 0) : Fl_Scroll(X, Y, W, H, L) {
-		nchild = 0;
-	}
-	void resize(int X, int Y, int W, int H) {
-		// Tell children to resize to our new width
-		for (int t = 0; t < nchild; t++) {
-			Fl_Widget *w = child(t);
-			w->resize(w->x(), w->y(), W - 20, w->h());    // W-20: leave room for scrollbar
-		}
-		// Tell scroll children changed in size
-		init_sizes();
-		Fl_Scroll::resize(X, Y, W, H);
-	}
-
-	// Append new scrollitem to bottom
-	//     Note: An Fl_Pack would be a good way to do this too
-	//
-	void AddItem() {
-		int X = x() + 1,
-			Y = y() - yposition() + (nchild*defaultHeight) + 1,
-			W = w() - 20,                           // -20: compensate for vscroll bar
-			H = defaultHeight;
-		add(new ScrollItem(X, Y, W, H));
-		redraw();
-		nchild++;
-	}
-};
 
 //creating drop down menus
 Fl_Menu_Item Publisher[] = {
   {"&Publisher",0,0,0,FL_SUBMENU},
-	{"&New York Times", 0, 0},
+	{"&New York Times", 0,0},
 	{"&Breitbart",  0, 0},
 	{"&CNN", 0, 0},
 	{"&Business Insider", 0, 0},
@@ -128,6 +78,74 @@ Fl_Menu_Item Month[] = {
 		{"&December", 0, 0},
 		{0},
 };
+
+const int fixedWidth = 100;
+const int defaultHeight = 20;
+
+class ScrollItem : public Fl_Group {
+	// the title and author that appear in the scroll menu
+	Fl_Box *docID;
+	Fl_Box *date;
+	Fl_Box *title;
+
+public:
+	ScrollItem(int X, int Y, int W, int H, const char* L = 0) : Fl_Group(X, Y, W, H, L) {
+		begin();
+
+		// Fixed docid box
+		docID = new Fl_Box(X, Y, fixedWidth, defaultHeight, "docid");
+		docID->box(FL_THIN_DOWN_FRAME);
+
+
+		// date published
+		date = new Fl_Box(X + fixedWidth, Y, fixedWidth, defaultHeight, "date");
+		date->box(FL_THIN_DOWN_FRAME);
+
+		//title box
+		title = new Fl_Box(X+ fixedWidth*2, Y,w() - 200, defaultHeight, "title");
+		title->box(FL_THIN_DOWN_FRAME);
+		resizable(title);
+		end();
+	}
+};
+
+class MyScroll : public Fl_Scroll {
+	// Custom scroll that tells children to follow scroll's width when resized
+	int nchild;
+public:
+	MyScroll(int X, int Y, int W, int H, const char* L = 0) : Fl_Scroll(X, Y, W, H, L) {
+		nchild = 0;
+	}
+	void resize(int X, int Y, int W, int H) {
+		// Tell children to resize to our new width
+		for (int t = 0; t < nchild; t++) {
+			Fl_Widget *w = child(t);
+			w->resize(w->x(), w->y(), W - 20, w->h());    // W-20: leave room for scrollbar
+		}
+		// Tell scroll children changed in size
+		init_sizes();
+		Fl_Scroll::resize(X, Y, W, H);
+	}
+
+	// Append new scrollitem to bottom
+	//     Note: An Fl_Pack would be a good way to do this too
+	//
+	void AddItem() {
+		int X = x() + 1,
+			Y = y() - yposition() + (nchild*defaultHeight) + 1,
+			W = w() - 20,                           // -20: compensate for vscroll bar
+			H = defaultHeight;
+		add(new ScrollItem(X, Y, W, H));
+		redraw();
+		nchild++;
+	}
+};
+
+void file_reader(int docID) {
+	string topicName = "notepad \"" + to_string(docID) + "\"";
+	system(topicName.c_str());
+}
+
 
 void button_search(Fl_Widget* obj, void* window) {
 	Fl_Window *win = (Fl_Double_Window*)window;
@@ -346,9 +364,10 @@ void make_result() {
 	scroll->end();
 	Fl_Button *add_butt = new Fl_Button(results->w() - 150, results->h() - 40, 40, 25, "Add");
 
+	doc = 5;
+
 	add_butt->callback(add_cb, (void*)scroll);
 	results->resizable(scroll);
-
 	results->end();
 	prev->callback((Fl_Callback*)button_prev, (Fl_Double_Window*)results);
 	//setting up window
