@@ -1,3 +1,4 @@
+#include <iostream>
 #include <FL/Fl.H>
 #include <FL/Fl_Window.H>
 #include <FL/Fl_Box.H>
@@ -8,11 +9,77 @@
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Slider.H>
 #include <FL/Fl_Value_Slider.H>
+#include <FL/Fl_Value_Input.H>
+#include "String"
+#include <FL/Fl_Multiline_Output.H>
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Group.H>
+#include <FL/Fl_Scroll.H>
 
 void make_result();
 void make_window();
 void make_result();
+void make_start();
+void make_intWindow();
 
+using namespace std;
+
+const int fixedWidth = 100;
+const int defaultHeight = 20;
+
+class ScrollItem : public Fl_Group {
+	// the title and author that appear in the scroll menu
+	Fl_Box *title;
+	Fl_Box *author;
+
+public:
+	ScrollItem(int X, int Y, int W, int H, const char* L = 0) : Fl_Group(X, Y, W, H, L) {
+		begin();
+		// Fixed width box
+		title = new Fl_Box(X, Y, fixedWidth, defaultHeight, "Title");
+		title->box(FL_UP_BOX);
+
+		// author
+		author = new Fl_Box(X + fixedWidth, Y, W - fixedWidth, defaultHeight, "Author");
+		author->box(FL_UP_BOX);
+		resizable(author);
+		end();
+	}
+};
+
+class MyScroll : public Fl_Scroll {
+	// Custom scroll that tells children to follow scroll's width when resized
+	int nchild;
+public:
+	MyScroll(int X, int Y, int W, int H, const char* L = 0) : Fl_Scroll(X, Y, W, H, L) {
+		nchild = 0;
+	}
+	void resize(int X, int Y, int W, int H) {
+		// Tell children to resize to our new width
+		for (int t = 0; t < nchild; t++) {
+			Fl_Widget *w = child(t);
+			w->resize(w->x(), w->y(), W - 20, w->h());    // W-20: leave room for scrollbar
+		}
+		// Tell scroll children changed in size
+		init_sizes();
+		Fl_Scroll::resize(X, Y, W, H);
+	}
+
+	// Append new scrollitem to bottom
+	//     Note: An Fl_Pack would be a good way to do this too
+	//
+	void AddItem() {
+		int X = x() + 1,
+			Y = y() - yposition() + (nchild*defaultHeight) + 1,
+			W = w() - 20,                           // -20: compensate for vscroll bar
+			H = defaultHeight;
+		add(new ScrollItem(X, Y, W, H));
+		redraw();
+		nchild++;
+	}
+};
+
+//creating drop down menus
 Fl_Menu_Item Publisher[] = {
   {"&Publisher",0,0,0,FL_SUBMENU},
 	{"&New York Times", 0, 0},
@@ -62,78 +129,234 @@ Fl_Menu_Item Month[] = {
 		{0},
 };
 
-void button_cb(Fl_Widget* obj, void*) {
+void button_search(Fl_Widget* obj, void* window) {
+	Fl_Window *win = (Fl_Double_Window*)window;
+	win->hide();
 	make_result();
+};
+
+void button_prev(Fl_Widget* obj, void* res) {
+	Fl_Double_Window *result = (Fl_Double_Window*)res;
+	result->hide();
+	make_window();
+};
+
+void button_start(Fl_Widget* obj, void* start) {
+	Fl_Window *str = (Fl_Window*)start;
+	str->hide();
+	make_window();
+};
+
+void button_back(Fl_Widget* obj, void* window) {
+	Fl_Window *win = (Fl_Window*)window;
+	win->hide();
+	make_start();
+};
+
+void button_intback(Fl_Widget* obj, void* window) {
+	Fl_Window *intwin = (Fl_Window*)window;
+	intwin->hide();
+	make_start();
+};
+
+void button_addfiles (Fl_Widget* obj, void* window) {
+	Fl_Window *win = (Fl_Window*)window;
+	win->hide();
+	make_intWindow();
+};
+
+// Callback to add new item to scroll
+void add_cb(Fl_Widget*, void *data) {
+	MyScroll *scroll = (MyScroll*)data;
+	scroll->AddItem();
 }
 
+void make_start() {
+	//creating window
+	Fl_Window *start = new Fl_Window(600, 300, "Search Engine");
+
+	//starting window
+	start->begin();
+
+	//setting background color
+	start->color(FL_WHITE);
+
+	//creating title
+	Fl_Box *titletxt = new Fl_Box(250, 20, 100, 100, "SEARCH NEWS");
+	titletxt->box(FL_NO_BOX);
+	titletxt->labelfont(FL_BOLD);
+	titletxt->labelsize(30);
+	titletxt->labeltype(FL_SHADOW_LABEL);
+
+	//search button
+	Fl_Button *query = new Fl_Button(200, 130, 200, 30, "SEARCH");
+	query->box(FL_UP_BOX);
+	query->labelfont(FL_BOLD);
+	query->labelsize(15);
+	query->labelcolor(fl_rgb_color(162, 60, 20));
+
+	//add button
+	Fl_Button *add = new Fl_Button(200, 170, 200, 30, "ADD FILES");
+	add->box(FL_UP_BOX);
+	add->labelfont(FL_BOLD);
+	add->labelsize(15);
+	add->labelcolor(fl_rgb_color(162, 60, 20));
+
+	//ending
+	start->end();
+
+	//adding event to button
+	query->callback((Fl_Callback*)button_start, (Fl_Window*)start);
+	add->callback((Fl_Callback*)button_addfiles, (Fl_Window*)start);
+
+	//setting up window
+	start->show();
+}
+
+void make_intWindow() {
+
+	//creating window
+	Fl_Window *intwindow = new Fl_Window(600, 300, "Search Engine");
+
+	//starting window
+	intwindow->begin();
+
+	//setting background color
+	intwindow->color(FL_WHITE);
+
+	//creating title
+	Fl_Box *inttitle = new Fl_Box(250, 20, 100, 100, "ADD FILES");
+	inttitle->box(FL_NO_BOX);
+	inttitle->labelfont(FL_BOLD);
+	inttitle->labelsize(30);
+	inttitle->labeltype(FL_SHADOW_LABEL);
+
+	//search button
+	Fl_Button *add= new Fl_Button(500, 100, 70, 30, "ADD");
+	add->box(FL_UP_BOX);
+	add->labelfont(FL_BOLD);
+	add->labelsize(12);
+	add->labelcolor(fl_rgb_color(162, 60, 20));
+
+	//back button
+	Fl_Button *intback = new Fl_Button(30, 100, 70, 30, "BACK");
+	intback->box(FL_UP_BOX);
+	intback->labelsize(12);
+	intback->labelcolor(fl_rgb_color(162, 60, 20));
+	
+	//search field
+	Fl_Input *inputfile = new Fl_Input(120, 100, 350, 30);
+	inputfile->value("add files here");
+
+	//ending
+	intwindow->end();
+
+	//adding event to button
+	add->callback((Fl_Callback*)button_search, (Fl_Window*)intwindow);
+	intback->callback((Fl_Callback*)button_intback, (Fl_Window*)intwindow);
+
+	//setting up window
+	intwindow->show();
+}
 void make_window() {
+	//creating window
 	Fl_Window *window = new Fl_Window(600, 300, "Search Engine");
-	
+
+	//starting window
 	window->begin();
-	
+
+	//setting background color
 	window->color(FL_WHITE);
-	
+
+	//creating title
 	Fl_Box *title = new Fl_Box(250, 20, 100, 100, "SEARCH NEWS");
 	title->box(FL_NO_BOX);
 	title->labelfont(FL_BOLD);
 	title->labelsize(30);
 	title->labeltype(FL_SHADOW_LABEL);
-	
+
+	//search button
 	Fl_Button *search = new Fl_Button(500, 100, 70, 30, "SEARCH");
 	search->box(FL_UP_BOX);
 	search->labelfont(FL_BOLD);
 	search->labelsize(12);
-	search->labeltype(FL_SHADOW_LABEL);
 	search->labelcolor(fl_rgb_color(162, 60, 20));
-	
-	Fl_Menu_Bar *pub = new Fl_Menu_Bar(100, 150, 80, 30);
+
+	//back button
+	Fl_Button *back = new Fl_Button(30, 100, 70, 30, "BACK");
+	back->box(FL_UP_BOX);
+	back->labelsize(12);
+	back->labelcolor(fl_rgb_color(162, 60, 20));
+
+	// creating dropdown
+	Fl_Menu_Bar *pub = new Fl_Menu_Bar(120, 150, 80, 30);
 	pub->menu(Publisher);
-	Fl_Menu_Bar *mon = new Fl_Menu_Bar(210, 150, 60, 30);
+	Fl_Menu_Bar *mon = new Fl_Menu_Bar(230, 150, 60, 30);
 	mon->menu(Month);
-	Fl_Menu_Bar *yr = new Fl_Menu_Bar(300, 150, 50, 30);
+	Fl_Menu_Bar *yr = new Fl_Menu_Bar(320, 150, 50, 30);
 	yr->menu(Year);
-	
-	Fl_Input *input = new Fl_Input(100, 100, 350, 30);
+
+	//search field
+	Fl_Input *input = new Fl_Input(120, 100, 350, 30);
 	input->value("Input your search query");
-	
+
+	//ending
 	window->end();
-	
-	search->callback((Fl_Callback*)button_cb);
-	
+
+	//adding event to button
+	search->callback((Fl_Callback*)button_search , (Fl_Window*) window);
+	back->callback((Fl_Callback*)button_back, (Fl_Window*)window);
+
+	//setting up window
 	window->show();
 }
 
 void make_result() {
 
-	Fl_Window *results = new Fl_Window(600, 600, "Search Results");
-	
+	//creating the output window
+	Fl_Double_Window *results = new Fl_Double_Window(600, 600, "Search Results");
+
+	//start of window
 	results->begin();
-	
+
+	//setting background color
 	results->color(FL_WHITE);
-	
-	Fl_Box *box = new Fl_Box(100, 10, 100, 100, "SEARCH NEWS");
+
+	// creating title
+	Fl_Box *box = new Fl_Box(results->w() - 500,results->w() - 590, 100, 100, "SEARCH NEWS");
 	box->box(FL_NO_BOX);
 	box->labelfont(FL_BOLD);
 	box->labelsize(30);
 	box->labeltype(FL_SHADOW_LABEL);
-	
+
+	// creating label best results
 	Fl_Box *best = new Fl_Box(80, 40, 100, 100, "Best Matched Documents");
 	best->box(FL_NO_BOX);
 	best->labelsize(17);
-	
-	Fl_Button *doc1 = new Fl_Button(100, 150, 70, 30, "SEARCH");
-	doc1->box(FL_UP_BOX);
-	doc1->labelsize(12);
-	doc1->labelcolor(fl_rgb_color(162, 60, 20));
-	
-	Fl_Slider *slider = new Fl_Slider(500, 300, 20, 200);
+
+	//previous page
+	Fl_Button *prev = new Fl_Button(results->w() - 500, results->h() - 40, 40, 25, "BACK");
+	prev->box(FL_UP_BOX);
+	prev->labelsize(12);
+	prev->labelcolor(fl_rgb_color(162, 60, 20));
+
+	//document autor and title listing
+	MyScroll *scroll = new MyScroll(30, 100, results->w() - 70, results->h() - 160);
+	scroll->box(FL_BORDER_BOX);
+	scroll->end();
+	Fl_Button *add_butt = new Fl_Button(results->w() - 150, results->h() - 40, 40, 25, "Add");
+
+	add_butt->callback(add_cb, (void*)scroll);
+	results->resizable(scroll);
 
 	results->end();
+	prev->callback((Fl_Callback*)button_prev, (Fl_Double_Window*)results);
+	//setting up window
 	results->show();
 
 }
 
 int main(int argc, char **argv) {
-	make_window();
+	make_start();
 	return Fl::run();
 }
