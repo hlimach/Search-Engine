@@ -20,4 +20,5 @@ ResultsPage.java displays the results of the query once search is hit (by using 
 
 AdditionPage.java provides UI for dynamic content addition (uses ReadfromFile.java for content addition). It adds the specified files into our dataset by parsing them and updating lexicon, all four inverted index and short index maps.
 
-A sample dataset of first 1000 modified docs is provided to test out the code.
+
+A sample dataset of first 10 modified docs, along with output files for the first 10k modified docs is provided to test out the backend and frontend respectively.
